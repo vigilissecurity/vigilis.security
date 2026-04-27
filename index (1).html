@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIGILIS — Attack Surface & Security Execution</title>
+  <meta name="description" content="We identify and eliminate real-world exposures before they become incidents." />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-2: #111111;
+      --surface: #161616;
+      --border: #222222;
+      --text: #e8e4dc;
+      --muted: #6a6a6a;
+      --accent: #c0392b;
+      --accent-dim: #7a1f18;
+      --white: #f0ece4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      -webkit-font-smoothing: antialiased;
+      cursor: crosshair;
+    }
+
+    /* ─── NOISE TEXTURE ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ─── TYPOGRAPHY ─── */
+    .logotype {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      line-height: 0.9;
+    }
+
+    .mono {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+    }
+
+    .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ─── HERO LOGOTYPE ─── */
+    .hero-logo {
+      font-size: clamp(4.5rem, 14vw, 12rem);
+      line-height: 0.88;
+      color: var(--white);
+      position: relative;
+      display: inline-block;
+    }
+
+    .hero-logo .red-dot {
+      display: inline-block;
+      width: clamp(0.55em, 1.5vw, 0.9em);
+      height: clamp(0.55em, 1.5vw, 0.9em);
+      background: var(--accent);
+      border-radius: 50%;
+      vertical-align: super;
+      margin-left: 0.04em;
+      margin-right: 0.02em;
+      position: relative;
+      top: clamp(0.05em, 0.3vw, 0.15em);
+      animation: pulse-dot 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .security-vertical {
+      position: absolute;
+      right: -2.2rem;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      writing-mode: vertical-rl;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.6rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      mix-blend-mode: normal;
+    }
+
+    nav::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 3rem; right: 3rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.3em;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+
+    /* ─── BUTTON ─── */
+    .btn-primary {
+      display: inline-block;
+      padding: 0.85rem 2.4rem;
+      border: 1px solid var(--white);
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      background: transparent;
+      cursor: crosshair;
+      transition: background 0.2s, color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 0;
+      background: var(--white);
+      transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      z-index: -1;
+    }
+
+    .btn-primary:hover::before { width: 100%; }
+    .btn-primary:hover { color: var(--bg); }
+
+    .btn-accent {
+      display: inline-block;
+      padding: 0.85rem 2.4rem;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      background: transparent;
+      cursor: crosshair;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    /* ─── SECTIONS ─── */
+    section {
+      padding: 8rem 3rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .section-label::after {
+      content: '';
+      display: block;
+      width: 3rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    /* ─── HERO ─── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 8rem;
+      padding-bottom: 6rem;
+      max-width: none;
+      padding-left: 3rem;
+      padding-right: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: var(--border);
+      opacity: 0.5;
+    }
+
+    .hero-meta {
+      position: absolute;
+      bottom: 4rem;
+      right: 3rem;
+      text-align: right;
+    }
+
+    /* ─── SERVICES ─── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .service-item {
+      padding: 2.5rem;
+      border-right: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      position: relative;
+      transition: background 0.25s;
+    }
+
+    .service-item:first-child { border-top: none; }
+    .service-item:nth-child(2) { border-top: none; }
+    .service-item:nth-child(3) { border-top: none; }
+    .service-item:nth-child(4) { border-top: none; border-right: none; }
+
+    .service-item:hover { background: var(--surface); }
+
+    .service-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      margin-bottom: 2.5rem;
+    }
+
+    .service-title {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .service-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.65;
+      letter-spacing: 0.03em;
+    }
+
+    /* ─── FINDINGS ─── */
+    #findings {
+      border-top: 1px solid var(--border);
+    }
+
+    .findings-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .findings-title {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1.05;
+    }
+
+    .finding-row {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      padding: 1.4rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.2s;
+      cursor: default;
+    }
+
+    .finding-row:first-child { border-top: 1px solid var(--border); }
+
+    .finding-row:hover { border-bottom-color: var(--accent); }
+
+    .finding-index {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.5rem;
+      color: var(--accent);
+      min-width: 1.5rem;
+    }
+
+    .finding-text {
+      font-size: 0.88rem;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── CTA ─── */
+    #cta {
+      background: var(--white);
+      color: var(--bg);
+      max-width: none;
+      padding: 7rem 3rem;
+      text-align: center;
+    }
+
+    .cta-headline {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 700;
+      font-size: clamp(3rem, 8vw, 7rem);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--bg);
+      line-height: 0.9;
+      margin-bottom: 3rem;
+    }
+
+    .cta-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 3.5rem;
+    }
+
+    .btn-dark {
+      display: inline-block;
+      padding: 0.9rem 2.8rem;
+      border: 1px solid var(--bg);
+      color: var(--white);
+      background: var(--bg);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: crosshair;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-dark:hover {
+      background: transparent;
+      color: var(--bg);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 4rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .footer-logo {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 700;
+      font-size: 2.2rem;
+      letter-spacing: 0.3em;
+      color: var(--white);
+    }
+
+    .footer-right { text-align: right; }
+
+    /* ─── RADAR CIRCLE (decorative) ─── */
+    .radar-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      opacity: 0.3;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .service-item:nth-child(3) { border-top: 1px solid var(--border); }
+      .service-item:nth-child(4) { border-top: 1px solid var(--border); border-right: none; }
+      .service-item:nth-child(2) { border-right: none; }
+      .findings-layout { grid-template-columns: 1fr; gap: 3rem; }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 1.4rem 1.5rem; }
+      nav::after { left: 1.5rem; right: 1.5rem; }
+      .nav-links { display: none; }
+      #hero { padding-left: 1.5rem; padding-right: 1.5rem; }
+      section { padding: 5rem 1.5rem; }
+      .services-grid { grid-template-columns: 1fr; }
+      .service-item { border-right: none !important; }
+      .security-vertical { display: none; }
+      footer { flex-direction: column; align-items: flex-start; gap: 2rem; }
+      .footer-right { text-align: left; }
+      #cta { padding: 5rem 1.5rem; }
+    }
+
+    /* ─── FADE IN ─── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════ NAV ═══════════════════════════ -->
+  <nav>
+    <a href="#" class="nav-logo">VIGILIS</a>
+    <ul class="nav-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#findings">Findings</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="btn-primary" style="font-size:0.55rem; padding:0.65rem 1.6rem;">
+      Request Scan
+    </a>
+  </nav>
+
+  <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+  <section id="hero">
+
+    <!-- Grid lines -->
+    <div class="hero-grid-line" style="left: 33.33%;"></div>
+    <div class="hero-grid-line" style="left: 66.66%;"></div>
+
+    <!-- Radar rings (decorative) -->
+    <div class="radar-ring" style="width:600px;height:600px;right:-200px;top:50%;transform:translateY(-50%);"></div>
+    <div class="radar-ring" style="width:400px;height:400px;right:-100px;top:50%;transform:translateY(-50%);"></div>
+    <div class="radar-ring" style="width:200px;height:200px;right:0px;top:50%;transform:translateY(-50%);"></div>
+
+    <!-- Label -->
+    <div class="label fade-up" style="margin-bottom: 3rem;">
+      <span style="color: var(--accent);">●</span>&nbsp;&nbsp;SYSTEM ACTIVE — SURFACE MONITORING
+    </div>
+
+    <!-- Logo -->
+    <div style="position: relative; display: inline-block; margin-bottom: 3.5rem;">
+      <h1 class="hero-logo fade-up" style="transition-delay: 0.1s;">
+        V<span class="red-dot"></span>GILIS
+      </h1>
+      <span class="security-vertical">SECURITY</span>
+    </div>
+
+    <!-- Subtitle -->
+    <p class="fade-up" style="
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+      transition-delay: 0.2s;
+    ">External Attack Surface &amp; Security Execution</p>
+
+    <p class="fade-up" style="
+      font-size: clamp(0.85rem, 1.5vw, 1rem);
+      color: var(--text);
+      max-width: 38rem;
+      line-height: 1.7;
+      letter-spacing: 0.03em;
+      margin-bottom: 3.5rem;
+      transition-delay: 0.3s;
+    ">We identify and eliminate real-world exposures before they become incidents.</p>
+
+    <div class="fade-up" style="transition-delay: 0.4s;">
+      <a href="#contact" class="btn-primary">Request a Security Snapshot</a>
+    </div>
+
+    <!-- Bottom meta -->
+    <div class="hero-meta">
+      <div class="mono" style="color: var(--muted); margin-bottom: 0.4rem;">PROTECT. MONITOR. DEFEND.</div>
+      <div class="mono" style="color: var(--border);">EST. 2024</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ SERVICES ═══════════════════════════ -->
+  <div style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <section id="services" style="padding: 0; max-width: none;">
+      <div class="services-grid">
+
+        <!-- Service header cell -->
+        <div style="
+          padding: 3rem 2.5rem;
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          min-height: 280px;
+          grid-column: span 0;
+        ">
+        </div>
+
+        <!-- Service items -->
+        <div class="service-item fade-up">
+          <div class="service-num">01</div>
+          <div class="service-title">Attack Surface<br>Scan</div>
+          <p class="service-desc">Identify exposed assets, subdomains, and external risks.</p>
+        </div>
+
+        <div class="service-item fade-up" style="transition-delay: 0.1s;">
+          <div class="service-num">02</div>
+          <div class="service-title">Pentest<br>Express</div>
+          <p class="service-desc">Fast, focused security testing with clear findings.</p>
+        </div>
+
+        <div class="service-item fade-up" style="transition-delay: 0.2s; border-right: none;">
+          <div class="service-num">03</div>
+          <div class="service-title">Fraud Exposure<br>Check</div>
+          <p class="service-desc">Detect exploitable fraud vectors across operations.</p>
+        </div>
+
+        <div class="service-item fade-up" style="transition-delay: 0.3s; border-top: 1px solid var(--border); border-right: none; grid-column: span 3;">
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: 4rem; align-items: start;">
+            <div>
+              <div class="service-num">04</div>
+              <div class="service-title">Security<br>Baseline</div>
+              <p class="service-desc">Eliminate common vulnerabilities and establish core controls.</p>
+            </div>
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: flex-end;
+              height: 100%;
+              padding-right: 1rem;
+            ">
+              <div class="section-label" style="margin-bottom: 0;">
+                Services
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════════════════ FINDINGS ═══════════════════════════ -->
+  <section id="findings">
+    <div class="section-label fade-up">Typical Exposures</div>
+
+    <div class="findings-layout">
+      <div class="fade-up">
+        <h2 class="findings-title">What we<br>find.</h2>
+        <p style="margin-top: 2rem; font-size: 0.82rem; color: var(--muted); line-height: 1.7; max-width: 22rem;">
+          Most organizations have more exposed surface than they realize. These are the patterns we encounter consistently.
+        </p>
+      </div>
+
+      <div class="fade-up" style="transition-delay: 0.15s;">
+        <div class="finding-row">
+          <span class="finding-index">01</span>
+          <span class="finding-text">Exposed admin panels</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-index">02</span>
+          <span class="finding-text">Forgotten subdomains</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-index">03</span>
+          <span class="finding-text">Leaked credentials</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-index">04</span>
+          <span class="finding-text">Misconfigured cloud services</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-index">05</span>
+          <span class="finding-text">Public internal tools</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ CTA ═══════════════════════════ -->
+  <section id="cta" style="background: var(--white);">
+    <div class="cta-sub fade-up">Security Snapshot — No commitment required</div>
+    <h2 class="cta-headline fade-up" style="transition-delay: 0.1s;">See what<br>is exposed.</h2>
+    <div class="fade-up" style="transition-delay: 0.2s;">
+      <a href="mailto:vigilis.security@gmail.com" class="btn-dark">Request a Scan</a>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ CONTACT ═══════════════════════════ -->
+  <section id="contact">
+    <div class="section-label fade-up">Contact</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6rem;" class="fade-up">
+      <div>
+        <p style="font-size: 0.88rem; color: var(--muted); line-height: 1.8; margin-bottom: 2.5rem; max-width: 28rem;">
+          We work with a limited number of clients at any given time. Reach out to discuss your exposure and whether Vigilis is the right fit.
+        </p>
+        <a href="mailto:vigilis.security@gmail.com" style="
+          display: block;
+          font-family: 'Space Mono', monospace;
+          font-size: 0.7rem;
+          letter-spacing: 0.12em;
+          color: var(--white);
+          text-decoration: none;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 1rem;
+          margin-bottom: 0.8rem;
+          transition: border-color 0.2s;
+        " onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          vigilis.security@gmail.com
+        </a>
+        <div class="mono" style="color: var(--muted);">Response within 24 hours.</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;">
+        <div style="
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              width: 12px;
+              height: 12px;
+              border-radius: 50%;
+              background: var(--accent);
+              animation: pulse-dot 3s ease-in-out infinite;
+            "></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+  <footer>
+    <div>
+      <div class="footer-logo">VIGILIS</div>
+      <div class="mono" style="color: var(--muted); margin-top: 0.6rem;">Attack Surface &amp; Security Execution</div>
+    </div>
+    <div class="footer-right">
+      <div class="mono" style="color: var(--muted); margin-bottom: 0.4rem;">PROTECT. MONITOR. DEFEND.</div>
+      <div class="mono" style="color: var(--border);">© 2024 Vigilis Security</div>
+    </div>
+  </footer>
+
+  <script>
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Trigger hero items immediately
+    setTimeout(() => {
+      document.querySelectorAll('#hero .fade-up').forEach(el => el.classList.add('visible'));
+    }, 100);
+  </script>
+</body>
+</html>
